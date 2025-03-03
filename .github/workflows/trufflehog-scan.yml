@@ -39,20 +39,23 @@ jobs:
 
       - name: Run TruffleHog on Changed Files
         run: |
-          if [[ -z "$FILES" ]]; then
-            echo "✅ No changed files to scan."
-            exit 0
-          fi
-          
-          echo "🔍 Scanning changed files: $FILES"
-          FOUND=false
-          for file in $FILES; do
-            echo "Scanning $file..."
-            trufflehog filesystem --path "$file" && continue
-            FOUND=true
-          done
+    if [[ -z "$FILES" ]]; then
+      echo "✅ No changed files to scan."
+      exit 0
+    fi
+    
+    echo "🔍 Scanning changed files: $FILES"
+    FOUND=false
+    for file in $FILES; do
+      echo "Scanning $file..."
+      
+      # Use the correct command based on TruffleHog's version
+      trufflehog $file && continue
+      
+      FOUND=true
+    done
 
-          if [[ "$FOUND" == "true" ]]; then
-            echo "❌ Secrets detected! Failing the job."
-            exit 1
-          fi
+    if [[ "$FOUND" == "true" ]]; then
+      echo "❌ Secrets detected! Failing the job."
+      exit 1
+    fi
